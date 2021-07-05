@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+    <!--    <script src="https://cdn.bootcdn.net/ajax/libs/recorderjs/0.1.0/recorder.js"></script>-->
+    <script src="static/recorder.js"></script>
+</head>
+<body>
+<p>
+    DeviceKey:<input type="text" id="dev_key">
+    <button id="dev_login">开启玩具</button>
+    <span id="toy_name"></span>
+</p>
+
+<audio autoplay controls id="player"></audio>
+<p>消息来自：<span id="from_user"></span></p>
+<p>对象类型：<span id="target_type"></span></p>
+<p>
+    <button onclick="start_reco()" style="background-color: #ffff00" id="start_btn">录制语音</button>
+    <span id="record_indicator">录音停止</span>
+</p>
+<p>
+    <button onclick="stop_reco_audio()" disabled style="background-color: green" id="stop_btn">发送语音消息</button>
+</p>
+<p>
+    <button onclick="reco_command_audio()" disabled style="background-color: chartreuse" id="send_command">发送语音指令
+    </button>
+</p>
+<p>
+    <button onclick="recv_msg()" style="background-color: purple" id="recv_btn">收取语音消息</button>
+</p>
+</body>
+<script type="text/javascript">
+    var serv = "https://192.168.8.123:8900";
+    var ws_serv = "wss://192.168.8.123:3721";
+    var ws
+    var toy_dict = {}
+    document.getElementById("dev_login").addEventListener('click', function () {
+        var key = document.getElementById('dev_key').value
+        document.getElementById('toy_name').innerText = ''
+        document.getElementById("target_type").innerText = ''
+        // alert(key)
+        $.ajax({
+            type: "POST",
+            url: serv + '/device_login',
+            data: {'device_key': key},
+            success: function (ret) {
+                console.log(ret['data'])
+                // alert(ret.msg)
+                document.getElementById('player').src = serv + '/t2a/' + ret.msg
+                if (ret['code'] == 0) {
+                    toy_dict = ret['data']
+                    console.log(toy_dict)
+                    document.getElementById('toy_name').innerText = "我是" + toy_dict['toy_name']
+
+                    create_ws(ws_serv, toy_dict['_id'])
+                }
+
+            }
+        })
+    })
+
+
+    function create_ws(wsserv, id) {
+        ws = new WebSocket(wsserv + "/toy/" + id)
+
+        ws.onopen = function () {
+            console.log(ws)
+        };
+
+        ws.onmessage = function (data) {
+            data_dict = JSON.parse(data.data)
+            console.log(data_dict);
+
+            if (data_dict['music']) {
+                var audio_path = data_dict['music']
+                // console.log(audio_path)
+                document.getElementById("player").src = serv + "/get_audio/" + audio_path
+            } else if (data_dict['chats']) {
+                var chats_path = data_dict['chats']
+                console.log(chats_path)
+                // document.getElementById("player").src = serv + "/get_chat/" + chats_path
+                document.getElementById("player").src = serv + "/t2a/" + chats_path
+                document.getElementById("from_user").innerText = data_dict['from_user']
+                document.getElementById("target_type").innerText = data_dict['friend_type'];
+
+            }
+        }
+
+        ws.onclose = function () {
+            console.log('Reconnecting...')
+            setTimeout(function () {
+                create_ws(ws_serv, toy_dict['_id'])
+            }, 1000)
+        }
+    }
+
+
+    function recv_msg() {
+        $.post(serv + '/recv_msg', {
+            to_user: toy_dict['_id'],
+            from_user: document.getElementById("from_user").innerText
+        }, function (data) {
+            console.log(data);
+            var player = document.getElementById('player');
+            // document.getElementById('player').src = serv + '/get_chat/' + data.msg
+            player.src = serv + '/t2a/' + data.shift().msg
+            player.onended = function() {
+                player.src = serv + '/get_chat/' + data.shift().msg;
+                player.onended = function () {
+                    if (data.length) {
+                        player.src = serv + '/get_chat/' + data.shift().msg;
+                    } else
+                        return;
+                }
+            }
+        }, 'json')
+    }
+
+    // $('#dev_login').click(function(){
+    //
+    // })
+    var reco = null;
+    var audio_context;
+
+    // navigator.mediaDevices.getUserMedia = (navigator.mediaDevices.getUserMedia ||
+    //     navigator.webkitGetUserMedia ||
+    //     navigator.mozGetUserMedia ||
+    //     navigator.msGetUserMedia);
+
+    navigator.mediaDevices.getUserMedia({audio: true})
+        .then(create_stream)
+        .catch(function (err) {
+            console.log(err)
+        });
+
+
+    // navigator.mediaDevices.getUserMedia({audio: true}, create_stream, function (err) {
+    //     console.log(err)
+    // });
+
+
+    function create_stream(user_media) {
+        AudioContextOptions = {
+            sampleRate: 16000,
+        }
+        audio_context = new AudioContext(AudioContextOptions);
+        var stream_input = audio_context.createMediaStreamSource(user_media);
+        reco = new Recorder(stream_input);
+        console.log(reco)
+    }
+
+    function start_reco() {
+
+
+        document.getElementById('record_indicator').innerText = "录音中"
+        document.getElementById('start_btn').disabled = true;
+        document.getElementById('stop_btn').disabled = false;
+        document.getElementById('send_command').disabled = false;
+
+        console.log("reco start")
+
+        reco.record();
+
+
+    }
+
+
+    function stop_reco_audio() {
+
+        document.getElementById('record_indicator').innerText = "录音停止"
+        document.getElementById('start_btn').disabled = false;
+        document.getElementById('stop_btn').disabled = true;
+        document.getElementById('send_command').disabled = true;
+
+
+        console.log("reco stop")
+        reco.stop();
+        send_audio();
+        reco.clear();
+    }
+
+    function reco_command_audio() {
+
+        document.getElementById('record_indicator').innerText = "录音停止"
+        document.getElementById('start_btn').disabled = false;
+        document.getElementById('stop_btn').disabled = true;
+        document.getElementById('send_command').disabled = true;
+
+        console.log("send command")
+        reco.stop();
+        send_command_audio();
+        reco.clear();
+    }
+
+    function send_command_audio() {
+        reco.exportWAV(function (wav_file) {
+            var formdata = new FormData();
+            formdata.append("record", wav_file);
+            formdata.append('from_user', toy_dict['_id']);
+            formdata.append('to_user', document.getElementById("from_user").innerText);
+            console.log(formdata);
+            $.ajax({
+                url: serv + "/command_uploader",
+                type: 'post',
+                processData: false,
+                contentType: false,
+                data: formdata,
+                dataType: 'json',
+                success: function (data) {
+                    console.log(data)
+                    if (data.code == 0) {
+                        if (data.chats) {
+                            document.getElementById("player").src = serv + "/t2a/" + data['chats']
+                        } else {
+                            document.getElementById("player").src = serv + "/get_audio/" + data['music']
+                        }
+                        document.getElementById("from_user").innerText = data['from_user']
+                        document.getElementById('target_type').innerText = data['friend_type']
+                    }
+                }
+            });
+
+        })
+    }
+
+    function send_audio() {
+        reco.exportWAV(function (wav_file) {
+            var formdata = new FormData();
+            formdata.append("record", wav_file);
+            formdata.append('from_user', toy_dict['_id']);
+            formdata.append('to_user', document.getElementById("from_user").innerText);
+            console.log(formdata);
+            $.ajax({
+                url: serv + "/toy_uploader",
+                type: 'post',
+                processData: false,
+                contentType: false,
+                data: formdata,
+                dataType: 'json',
+                success: function (data) {
+                    console.log(data)
+                    if (data.code == 0) {
+                        send_dict = {
+                            'to_user': document.getElementById("from_user").innerText,
+                            'from_user': toy_dict['_id'],
+                            'chats': data.data.filename
+                        };
+                        ws.send(JSON.stringify(send_dict));
+                    }
+                }
+            });
+
+        })
+    }
+
+
+</script>
+</html>
