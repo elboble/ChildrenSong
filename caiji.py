@@ -44,10 +44,41 @@ def caiji(aid):
     return audioInfo
 
 
-for sid in sid_list:
-    print(f"caiji {sid}...", end='')
-    audioInfo_list.append(caiji(sid))
-    print('OK!')
-    time.sleep(1)
 
-MONGO_DB.erge.insert_many(audioInfo_list)
+def caiji_santi(directory,subclass):
+    import os
+    g = os.walk(directory)
+
+    for path, dir_list, file_list in g:
+        for file_name in file_list:
+            # print(os.path.join(path, file_name))
+            if os.path.splitext(file_name)[-1][1:] == "m4a":
+                audioInfo = {
+                    'title': os.path.split(file_name)[1],
+                    'nickname': os.path.split(path)[1],
+                    'audio_path': file_name,
+                    'cover_path': '三体第一季.jpg',
+                    'subclass': subclass,
+                }
+                # print(audioInfo)
+                audioInfo_list.append(audioInfo)
+
+
+
+
+
+
+if __name__ == '__main__':
+    # for sid in sid_list:
+    #     print(f"caiji {sid}...", end='')
+    #     audioInfo_list.append(caiji(sid))
+    #     print('OK!')
+    #     time.sleep(1)
+    #
+    # MONGO_DB.erge.insert_many(audioInfo_list)
+    audio_path = "/Volumes/downloads/"
+    wenjianjia = "三体广播剧（第1季）"
+
+    caiji_santi(audio_path+wenjianjia,'santi1')
+    print(audioInfo_list)
+    MONGO_DB.erge.insert_many(audioInfo_list)
