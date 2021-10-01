@@ -31,6 +31,7 @@ def toy():
 
 if __name__ == '__main__':
     app.run("0.0.0.0", 8900, debug=True,ssl_context=(PEM,KEY))
+    # app.run("0.0.0.0", 8900, debug=True)
 
 
 

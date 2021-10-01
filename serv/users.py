@@ -41,11 +41,11 @@ def login():
 
 @users.route("/auto_login",methods=["POST"])
 def auto_login():
-    print(request.form.to_dict())
+    # print(request.form.to_dict())
     user_id = request.form.to_dict()
     user_id['_id'] = ObjectId(user_id['_id'])
     user = MONGO_DB.users.find_one(user_id,{"password":0})
-    print(user)
+    # print(user)
     user["_id"] = str(user_id['_id'])
 
     RET['code'] = 0

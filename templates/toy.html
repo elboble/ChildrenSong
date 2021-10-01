@@ -38,6 +38,7 @@
 <script type="text/javascript">
     var serv = "https://192.168.8.123:8900";
     var ws_serv = "wss://192.168.8.123:3721";
+    var data_server = 'https://iscm.webredirect.org:50124/files/datahouse'
     var ws
     var toy_dict = {}
     document.getElementById("dev_login").addEventListener('click', function () {
@@ -79,8 +80,15 @@
 
             if (data_dict['music']) {
                 var audio_path = data_dict['music']
-                // console.log(audio_path)
-                document.getElementById("player").src = serv + "/get_audio/" + audio_path
+                var subclass = data_dict['subclass']
+                var nickname = data_dict['nickname']
+
+                console.log(audio_path,subclass)
+                if (subclass.search('santi') != -1){
+                    document.getElementById("player").src = data_server + "/" + nickname + "/" + audio_path;
+                }else {
+                    document.getElementById("player").src = serv + "/get_audio/" + audio_path;
+                }
             } else if (data_dict['chats']) {
                 var chats_path = data_dict['chats']
                 console.log(chats_path)
@@ -92,11 +100,12 @@
             }
         }
 
-        ws.onclose = function () {
+        ws.onclose = function (data) {
+            console.log(data)
             console.log('Reconnecting...')
-            setTimeout(function () {
-                create_ws(ws_serv, toy_dict['_id'])
-            }, 1000)
+            // setTimeout(function () {
+            //     create_ws(ws_serv, toy_dict['_id'])
+            // }, 1000)
         }
     }
 

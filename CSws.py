@@ -82,7 +82,9 @@ def toy(toy_id):
 
 if __name__ == '__main__':
     http_serv = WSGIServer(('0.0.0.0', 3721), ws_app, handler_class=WebSocketHandler,certfile=PEM,keyfile=KEY)
+    # http_serv = WSGIServer(('0.0.0.0', 3721), ws_app, handler_class=WebSocketHandler)
 try:
     http_serv.serve_forever()
-except:
+except Exception as e:
+    print("e")
     pass
