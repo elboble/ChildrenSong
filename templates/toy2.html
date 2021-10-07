@@ -37,8 +37,7 @@
 </body>
 <script type="text/javascript">
     var serv = "https://cs.xliyang.cn";
-    var ws_serv = "wss://xliyang.cn/wss";
-    var data_server = 'https://iscm.webredirect.org:50124/files/datahouse';
+    var ws_serv = "wss://wss.xliyang.cn";
     var ws
     var toy_dict = {}
     document.getElementById("dev_login").addEventListener('click', function () {
@@ -81,14 +80,8 @@
 
             if (data_dict['music']) {
                 var audio_path = data_dict['music']
-		var subclass = data_dict['subclass']
-		var nickname = data_dict['nickname']
                 // console.log(audio_path)
-		if (subclass.search('santi') != -1){
-                    document.getElementById("player").src = data_server + "/" + nickname + "/" + audio_path;
-                }else {
-                    document.getElementById("player").src = serv + "/get_audio/" + audio_path;
-                }	
+                document.getElementById("player").src = serv + "/get_audio/" + audio_path
             } else if (data_dict['chats']) {
                 var chats_path = data_dict['chats']
                 console.log(chats_path)
@@ -101,11 +94,11 @@
         }
 
         ws.onclose = function (data) {
-	    //console.log(data)
+	    console.log(data)
             console.log('Reconnecting...')
-            setTimeout(function () {
-                create_ws(ws_serv, toy_dict['_id'])
-            }, 1000)
+            //setTimeout(function () {
+            //    create_ws(ws_serv, toy_dict['_id'])
+            //}, 1000)
         }
     }
 

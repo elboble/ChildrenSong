@@ -15,7 +15,7 @@ t2audio = Blueprint("t2audio", __name__)
 @t2audio.route("/t2a/<text>")
 def t2a(text):
     ret = text2audio(text)
-
+    
     # 识别正确返回语音二进制 错误则返回dict 参照下面错误码
     if not isinstance(ret,dict):
         return send_file(filename_or_fp=BytesIO(ret),mimetype='audio/mpeg')

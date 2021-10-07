@@ -10,8 +10,8 @@ from redisMsg import set_redis
 from setting import PEM,KEY,MONGO_DB,RET,PROJECT_PATH
 from misc import _get_xxtx
 
-ws_app = Flask(__name__)
 
+ws_app = Flask(__name__)
 user_socket_dict = {}
 
 
@@ -43,7 +43,10 @@ def app(app_id):
 
 @ws_app.route('/toy/<toy_id>')
 def toy(toy_id):
+#    print("entering toy...")
+#    print("request",request.environ)
     user_socket = request.environ.get("wsgi.websocket")  # type:WebSocket
+#    print("user_scoket:",user_socket)
     if user_socket:
         user_socket_dict[toy_id] = user_socket
 
@@ -81,8 +84,12 @@ def toy(toy_id):
 
 
 if __name__ == '__main__':
-    http_serv = WSGIServer(('0.0.0.0', 3721), ws_app, handler_class=WebSocketHandler,certfile=PEM,keyfile=KEY)
+#    http_serv = WSGIServer(('0.0.0.0', 3721), ws_app, handler_class=WebSocketHandler,certfile=PEM,keyfile=KEY)
+    http_serv = WSGIServer(('0.0.0.0', 3721), ws_app, handler_class=WebSocketHandler)
 try:
     http_serv.serve_forever()
 except:
     pass
+
+
+

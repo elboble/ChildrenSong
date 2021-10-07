@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify,request
 
 from setting import MONGO_DB, RET
 
@@ -17,7 +17,8 @@ class JSONEncoder(json.JSONEncoder):
 
 @content.route("/content_list",methods=["POST"])
 def content_list():
-    res = list(MONGO_DB.erge.find({}))
+    subclass = request.form.get('subclass')
+    res = list(MONGO_DB.erge.find({'subclass':subclass}).sort('title',1))
     # print(res)
     RET["code"] = 200
     RET["msg"] = "查询儿歌"

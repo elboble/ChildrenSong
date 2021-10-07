@@ -111,6 +111,7 @@ def uploader():
 
     path = os.path.join(CHATS_PATH,audio.filename)
     audio.save(path)
+    print(path)
     os.system(f"ffmpeg -i {path} {path}.mp3")
 
     #消息存储记录 chats
@@ -175,9 +176,9 @@ def command_uploader():
     audio.save(path)
 
     ret = audio2text(SERV+'/get_chat/'+filename)
-
+    
     if ret['err_no'] == 0:
-        # print(ret['result'][0])
+        print(ret['result'][0])
         nlp_ret = command_nlp(ret['result'][0],from_user)
     return jsonify(nlp_ret)
 
