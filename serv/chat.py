@@ -75,9 +75,13 @@ def chat_list():
 def chat_count():
     from_user = request.form.get("from_user")
     count_list = get_redis_all(from_user)
+    print('chat_count',count_list)
 
-    RET['code'] = 0
-    RET['msg'] = '获取未读消息数'
-    RET['data']= count_list
+    if isinstance(count_list,dict):
+        RET['code'] = 0
+        RET['msg'] = '获取未读消息数'
+        RET['data']= count_list
+    else:
+        RET['data'] ={'count':-1}
 
     return jsonify(RET)

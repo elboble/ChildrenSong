@@ -1,4 +1,4 @@
-import os,re,time
+import os,re,time,json,random
 import mimetypes
 
 from uuid import uuid4
@@ -181,9 +181,6 @@ def command_uploader():
         nlp_ret = command_nlp(ret['result'][0],from_user)
     return jsonify(nlp_ret)
 
-
-
-
     # os.system(f"ffmpeg -i {path} {path}.mp3")
     # os.system(f"ffmpeg -y  -i {path}  -acodec pcm_s16le -f s16le -ac 1 -ar 16000 {path}.pcm")
     # os.system(f"ffmpeg -y  -i {path}  -ac 1 -ar 16000 {path}")
@@ -194,3 +191,23 @@ def command_uploader():
 
     return jsonify(RET)
 
+from bson import ObjectId
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
+
+@gsa.route("/get_startup_img",methods=['POST'])
+def get_startup_img():
+
+    res = MONGO_DB.startupimg.find_one(sort=[("is_used_next_time", -1)])
+    # print(res)
+    max_is_used_next_time = res['is_used_next_time']
+    res = random.choices(list(MONGO_DB.startupimg.find({'is_used_next_time':max_is_used_next_time})))
+
+    # print(res)
+    RET['code'] = 0
+    RET['msg'] = '获取开机启动图'
+    RET['data'] = res
+    return JSONEncoder().encode(RET)
